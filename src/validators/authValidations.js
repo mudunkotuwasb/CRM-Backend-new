@@ -36,7 +36,7 @@ const signupSchema = Joi.object({
     .min(8)
     .required(),
   role: Joi.string()
-    .valid("ADMIN", "MANAGEMENT", "MARKETING_STAFF", "COMPANY_REPRESENTATIVE")
+    .valid("ADMIN", "MANAGEMENT", "MARKETING_STAFF", "COMPANY_REPRESENTATIVE") // TODO: take this values from the enum
     .required()
 });
 
@@ -45,7 +45,7 @@ const signupSchema = Joi.object({
  * @const loginSchema
  */
 const loginSchema = Joi.object({
-  username: Joi.string().min(4).required(),
+  email: Joi.string().email().required(),
   password: Joi
     .string()
     .pattern(new RegExp("^[a-zA-Z0-9@#$%^&*!_]{3,30}$"))
