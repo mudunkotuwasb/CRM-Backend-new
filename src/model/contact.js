@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const CONTACT_STATUS = require('../utils/status');
-const { required } = require("joi");
 
 const contactSchema = new mongoose.Schema({
 // TODO: missed title of the user (contact)
