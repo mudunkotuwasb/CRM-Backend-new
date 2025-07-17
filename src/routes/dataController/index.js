@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const { checkRole } = require("../../controller/auth");
 const ROLES = require("../../utils/roles");
-
 const { 
     deleteTemporarily,
     restoreRecord,
@@ -18,7 +17,7 @@ router.delete("/deleteTemporarily", checkRole([ROLES.admin, ROLES.company_repres
  * @swagger
  * /api/dataController/deleteTemporarily:
  *   delete:
- *     summary: Soft delete a business or contact record
+ *     summary: Soft delete a record
  *     tags: [Admin, Company Representative]
  *     security:
  *       - bearerAuth: []
@@ -28,14 +27,8 @@ router.delete("/deleteTemporarily", checkRole([ROLES.admin, ROLES.company_repres
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - type
- *               - id
+ *             required: id
  *             properties:
- *               type:
- *                 type: string
- *                 description: The type of model to delete (business or contact)
- *                 enum: [business, contact]
  *               id:
  *                 type: string
  *                 description: The MongoDB ObjectId of the record
@@ -63,7 +56,7 @@ router.put("/restoreRecord", checkRole([ROLES.admin]), restoreRecord);
  * @swagger
  * /api/dataController/restoreRecord:
  *   put:
- *     summary: Restore a soft-deleted business or contact
+ *     summary: Restore a soft-deleted contact
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -74,13 +67,8 @@ router.put("/restoreRecord", checkRole([ROLES.admin]), restoreRecord);
  *           schema:
  *             type: object
  *             required:
- *               - type
  *               - id
  *             properties:
- *               type:
- *                 type: string
- *                 description: The model type to restore (business or contact)
- *                 enum: [business, contact]
  *               id:
  *                 type: string
  *                 description: The MongoDB ObjectId of the document
@@ -94,7 +82,7 @@ router.put("/restoreRecord", checkRole([ROLES.admin]), restoreRecord);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: business restored successfully.
+ *                   example: Record restored successfully.
  *       400:
  *         description: Invalid type or ID
  *       404:
@@ -108,7 +96,7 @@ router.delete("/deletePermanently", checkRole([ROLES.admin]), deletePermanently)
  * @swagger
  * /api/dataController/deletePermanently:
  *   delete:
- *     summary: Permanently delete a soft-deleted business or contact
+ *     summary: Permanently delete a soft-deleted record
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -118,14 +106,8 @@ router.delete("/deletePermanently", checkRole([ROLES.admin]), deletePermanently)
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - type
- *               - id
+ *             required: id
  *             properties:
- *               type:
- *                 type: string
- *                 description: Model to delete permanently (business or contact)
- *                 enum: [business, contact]
  *               id:
  *                 type: string
  *                 description: MongoDB ObjectId of the soft‑deleted document
