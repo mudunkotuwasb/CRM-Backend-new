@@ -10,8 +10,8 @@ const changeUserStatus = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({success: false, message: "User not found"});
 
-    user.status = status; await user.save();
-
+    user.status = status; 
+    await user.save();
     return res.status(200).json({success: true, message: "User status updated successfully",
       user: {id: user._id, username: user.username, status: user.status}});
   } catch (error) {
