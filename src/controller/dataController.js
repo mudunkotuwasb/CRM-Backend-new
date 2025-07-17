@@ -1,107 +1,95 @@
-const Business = require("../model/business");
 const Contact = require("../model/contact");
 const mongoose = require("mongoose");
 
 const deleteTemporarily = async (req, res) => {
-    const { type, id } = req.body;
-    const allowedTypes = ['business', 'contact'];
-    if (!allowedTypes.includes(type)) return res.status(400).json({ message: "Invalid type" });
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid ID format' });
-    
-    try {
-        if (type === "business") {
-            const business = await Business.findByIdAndUpdate(id, { isDeleted: true });
-            if (!business) return res.status(404).json({ message: "Business not found" });  
-        } else if (type === "contact") {
-            const contact = await Contact.findByIdAndUpdate(id, { isDeleted: true });
-            if (!contact) return res.status(404).json({ message: "Contact not found" });  
-        } else {
-            return res.status(400).json({ message: "Something went wrong" });
-        }
+    const { id } = req.params;
 
-        return res.status(200).json({ message: "Data deleted temporarily" });
+    if (!mongoose.Types.ObjectId.isValid(id))
+        return res.status(400).json({ message: 'Invalid ID format' });
+
+    try {
+        const contact = await Contact.findById(id);
+        if (!contact) return res.status(404).json({ message: "Contact not found" });
+
+        if (contact.isDeleted === true)
+            return res.status(400).json({ message: "Contact is already marked as deleted" });
+
+        contact.isDeleted = true;
+        await contact.save();
+
+        return res.status(200).json({ message: "Contact deleted temporarily" });
     } catch (error) {
-        console.error("Error deleting business:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
+
 
 const restoreRecord = async (req, res) => {
-    const { type, id } = req.body;
-    const allowedTypes = ['business', 'contact'];
-    if (!allowedTypes.includes(type)) return res.status(400).json({ message: "Invalid type" });
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid ID format' });
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) 
+        return res.status(400).json({ message: 'Invalid ID format' });
     
     try {
-        if (type === "business") {
-            const business = await Business.findByIdAndUpdate(id, { isDeleted: false });
-            if (!business) return res.status(404).json({ message: "Business not found" });
-            
-        } else if (type === "contact") {
-            const contact = await Contact.findByIdAndUpdate(id, { isDeleted: false });
-            if (!contact) return res.status(404).json({ message: "Contact not found" });
-        } else {
-            return res.status(400).json({ message: "Something went wrong" });
-        }
-
-        return res.status(200).json({ message: "Data restored successfully" });
+        const contact = await Contact.findById(id);
+        if (!contact) return res.status(404).json({ message: "Contact not found" });
+        if (!contact.isDeleted) return res.status(400).json({ message: "Contact is not deleted" });
+        contact.isDeleted = false;
+        await contact.save();
+        return res.status(200).json({ message: "Contact restored successfully" });
     } catch (error) {
-        console.error("Error restoring data:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        console.error("Error restoring contact:", error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
+
 
 const deletePermanently = async (req, res) => {
-    const { type, id } = req.body;
-    const allowedTypes = ['business', 'contact'];
-    if (!allowedTypes.includes(type)) return res.status(400).json({ message: "Invalid type" });
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid ID format' });
-    
-    try{
-        if (type === "business") {
-            const business = await Business.findByIdAndDelete({ _id: id });
-            if (!business) return res.status(404).json({ message: "Business not found" });  
-        } else if (type === "contact") {
-            const contact = await Contact.findByIdAndDelete({ _id: id });
-            if (!contact) return res.status(404).json({ message: "Contact not found" });
-        } else {
-            return res.status(400).json({ message: "Something went wrong" });
-        }
+    const { id } = req.params;
 
-        return res.status(200).json({ message: "Data deleted successfully" });
+    if (!mongoose.Types.ObjectId.isValid(id)) 
+        return res.status(400).json({ message: 'Invalid ID format' });
+    
+    try {
+        const contact = await Contact.findById(id);
+
+        if (!contact) return res.status(404).json({ message: "Contact not found" });
+        if (!contact.isDeleted) 
+            return res.status(400).json({ message: "Contact is not marked as deleted. Cannot permanently delete." });
+        
+        await Contact.findByIdAndDelete(id);
+        return res.status(200).json({ message: "Contact permanently deleted" });
     } catch (error) {
-        console.error("Error deleting data:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        console.error("Error deleting contact:", error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
 
+
 const deleteAll = async (req, res) => {
-  try {
-    const modelNames = mongoose.modelNames();
+    try {
+        const modelNames = mongoose.modelNames();
 
-    for (const name of modelNames) {
-      const Model = mongoose.model(name);
+        for (const name of modelNames) {
+            const Model = mongoose.model(name);
 
-      // Skip if model doesn't have an `isDeleted` field
-      const schemaPaths = Model.schema.paths;
-      if (!schemaPaths['isDeleted']) continue;
+            // Skip if model doesn't have an `isDeleted` field
+            const schemaPaths = Model.schema.paths;
+            if (!schemaPaths['isDeleted']) continue;
 
-      // Delete all documents with isDeleted: true
-      await Model.deleteMany({ isDeleted: true });
+            // Delete all documents with isDeleted: true
+            await Model.deleteMany({ isDeleted: true });
+        }
+
+        return res.status(200).json({
+            message: 'All temporarily deleted records permanently removed.',
+        });
+    } catch (error) {
+        console.error('Error in bulk delete:', error);
+        return res.status(500).json({
+            message: 'Internal server error',
+        });
     }
-
-    return res.status(200).json({
-      message: 'All temporarily deleted records permanently removed.',
-    });
-  } catch (error) {
-    console.error('Error in bulk delete:', error);
-    return res.status(500).json({
-      message: 'Internal server error',
-    });
-  }
 };
 
 module.exports = {
