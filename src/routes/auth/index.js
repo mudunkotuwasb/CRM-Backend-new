@@ -41,8 +41,6 @@ router.post("/signup", async (req, res) => {
  *         description: Validation error
  */
 
-
-//  Admin Login Route
 router.post("/login", async (req, res) => {
   await userLogin(req.body, res);
 });
@@ -59,12 +57,12 @@ router.post("/login", async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - username
+ *               - email
  *               - password
  *             properties:
- *               username:
+ *               email:
  *                 type: string
- *                 example: abcd
+ *                 example: abcd@gmail.com
  *               password:
  *                 type: string
  *                 example: abcd@423
