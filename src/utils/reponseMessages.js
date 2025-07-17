@@ -14,13 +14,14 @@ const registration = {
  * @const loginMSG
  */
 const loginMSG = {
-  usernameNotExist: "Username is not found. Invalid login credentials.",
+  emailNotExist: "Email is not found. Invalid login credentials.",
   wrongRole: "Please make sure this is your identity.",
   loginSuccess: "You are successfully logged in.",
   wrongPassword: "Incorrect password.",
   loginError: "Oops! Something went wrong.",
 };
 
+// TODO: get rest of the messages as well
 module.exports = {
     registration,
     loginMSG
