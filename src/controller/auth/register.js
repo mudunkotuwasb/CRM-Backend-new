@@ -33,8 +33,7 @@ const register = async (userRequest, res) => {
 
     // validate the email
     let emailNotRegistered = await validateEmail(signupRequest.email);
-    if (!emailNotRegistered) {
-      return res.status(400).json({message: registration.emailExists, success: false})};
+    if (!emailNotRegistered) return res.status(400).json({message: registration.emailExists, success: false});
 
     // Get the hashed password
     const password = await bcrypt.hash(signupRequest.password, 12);
@@ -43,7 +42,6 @@ const register = async (userRequest, res) => {
       ...signupRequest,
       password
     });
-
     await newUser.save();
     return res.status(201).json({message: registration.signupSuccess, success: true});
   } catch (err) {
