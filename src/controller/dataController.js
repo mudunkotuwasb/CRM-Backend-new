@@ -1,25 +1,26 @@
 const Contact = require("../model/contact");
 const mongoose = require("mongoose");
+const { deleteTemporarilyMSG, restoreRecordMSG, deletePermanentlyMSG, deleteAllMSG } = require("../utils/reponseMessages");
 
 const deleteTemporarily = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id))
-        return res.status(400).json({ message: 'Invalid ID format' });
+        return res.status(400).json({ message: deleteTemporarilyMSG.isNotValidId });
 
     try {
         const contact = await Contact.findById(id);
-        if (!contact) return res.status(404).json({ message: "Contact not found" });
+        if (!contact) return res.status(404).json({ message: deleteTemporarilyMSG.contactNotExist });
 
         if (contact.isDeleted === true)
-            return res.status(400).json({ message: "Contact is already marked as deleted" });
+            return res.status(400).json({ message: deleteTemporarilyMSG.isIsDeletedTrue });
 
         contact.isDeleted = true;
         await contact.save();
 
-        return res.status(200).json({ message: "Contact deleted temporarily" });
+        return res.status(200).json({ message: deleteTemporarilyMSG.isDeletedTrueSuccess });
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error", error: error.message });
+        return res.status(500).json({ message: err.message });
     }
 };
 
@@ -28,18 +29,17 @@ const restoreRecord = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) 
-        return res.status(400).json({ message: 'Invalid ID format' });
+        return res.status(400).json({ message: restoreRecordMSG.isNotValidId });
     
     try {
         const contact = await Contact.findById(id);
-        if (!contact) return res.status(404).json({ message: "Contact not found" });
-        if (!contact.isDeleted) return res.status(400).json({ message: "Contact is not deleted" });
+        if (!contact) return res.status(404).json({ message: restoreRecordMSG.contactNotExist });
+        if (!contact.isDeleted) return res.status(400).json({ message: restoreRecordMSG.isIsDeletedTrue });
         contact.isDeleted = false;
         await contact.save();
-        return res.status(200).json({ message: "Contact restored successfully" });
+        return res.status(200).json({ message: restoreRecordMSG.isDeletedFalseSuccess });
     } catch (error) {
-        console.error("Error restoring contact:", error);
-        return res.status(500).json({ message: "Internal server error", error: error.message });
+        return res.status(500).json({ message: err.message });
     }
 };
 
@@ -48,20 +48,19 @@ const deletePermanently = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) 
-        return res.status(400).json({ message: 'Invalid ID format' });
+        return res.status(400).json({ message: deletePermanentlyMSG.isNotValidId });
     
     try {
         const contact = await Contact.findById(id);
 
-        if (!contact) return res.status(404).json({ message: "Contact not found" });
+        if (!contact) return res.status(404).json({ message: deletePermanentlyMSG.contactNotExist });
         if (!contact.isDeleted) 
-            return res.status(400).json({ message: "Contact is not marked as deleted. Cannot permanently delete." });
+            return res.status(400).json({ message: deletePermanentlyMSG.isNotIsDeletedTrue });
         
         await Contact.findByIdAndDelete(id);
-        return res.status(200).json({ message: "Contact permanently deleted" });
+        return res.status(200).json({ message: deletePermanentlyMSG.deletePermanentlySuccess });
     } catch (error) {
-        console.error("Error deleting contact:", error);
-        return res.status(500).json({ message: "Internal server error", error: error.message });
+        return res.status(500).json({ message: err.message });
     }
 };
 
@@ -81,14 +80,9 @@ const deleteAll = async (req, res) => {
             await Model.deleteMany({ isDeleted: true });
         }
 
-        return res.status(200).json({
-            message: 'All temporarily deleted records permanently removed.',
-        });
+        return res.status(200).json({ message: deleteAllMSG.deleteAllSuccess});
     } catch (error) {
-        console.error('Error in bulk delete:', error);
-        return res.status(500).json({
-            message: 'Internal server error',
-        });
+        return res.status(500).json({ message: err.message });
     }
 };
 

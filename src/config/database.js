@@ -11,15 +11,9 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: REQUEST_TIMEOUT,
     });
 
-    success({
-      message: `✅ Successfully connected to MongoDB: ${DB}`,
-      badge: true,
-    });
+    success({ message: `✅ Successfully connected to MongoDB: ${DB}`, badge: true });
   } catch (err) {
-    error({
-      message: `❌ Failed to connect to MongoDB:\n${err}`,
-      badge: true,
-    });
+    error({ message: `❌ Failed to connect to MongoDB:\n${err}`, badge: true });
 
     // Optional: Retry connection
     setTimeout(connectDB, 5000); // Retry after 5 seconds

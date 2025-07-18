@@ -21,10 +21,10 @@ const login = async (userRequest, res) => {
     await loginSchema.validateAsync(userRequest);
     let { email, password } = userRequest;
 
-    if (!email || !password) return res.status(400).json({ success: false, message: "Email and password are required" });
+    if (!email || !password) return res.status(400).json({ success: false, message: loginMSG.isRequiredEmpty });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) return res.status(404).json({ success: false, message: loginMSG.userNotExist });
   
     //  Check for the password
     let isMatch = await bcrypt.compare(password, user.password);

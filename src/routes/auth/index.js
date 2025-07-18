@@ -1,7 +1,7 @@
 const router = require("express").Router();
 
 const { userLogin, userRegister } = require("../../controller/auth");
-const { resetPasswordController } = require("../../controller/userController.js");
+const { resetPassword } = require("../../controller/userController.js");
 
 router.post("/signup", async (req, res) => {
   await userRegister(req.body, res);
@@ -102,7 +102,7 @@ router.post("/login", async (req, res) => {
  *         description: Server error
  */
 
-router.post("/reset-password", resetPasswordController);
+router.post("/reset-password", resetPassword);
 /**
  * @swagger
  * /api/auth/reset-password:

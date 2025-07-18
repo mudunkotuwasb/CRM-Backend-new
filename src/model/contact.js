@@ -2,13 +2,11 @@ const mongoose = require("mongoose");
 const CONTACT_STATUS = require('../utils/status');
 
 const contactSchema = new mongoose.Schema({
-// TODO: missed title of the user (contact)
-  Name: { type: String, required: true }, // TODO: don't use capital letters as the first character
+  name: { type: String, required: true }, 
   company: { type: mongoose.Schema.Types.ObjectId, required: true },
-   contactInfo: {
-    email: { type: String, required: true }, // TODO: use seperated fields for these, no need a json 
-    phone: { type: String, required: true }
-  },
+  position: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   uploadDDate: { type: Date, required: true },
   assignedTo: { type: String, default: "Unassigned" },
