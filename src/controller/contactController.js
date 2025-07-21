@@ -9,7 +9,7 @@ const { addContactMSG,
 
 const addContact = async (req, res) => {
   try {
-    const { name, company, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
+    const { name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
 
     // Validate assignedTo if provided
     if (!uploadedBy)
@@ -21,7 +21,7 @@ const addContact = async (req, res) => {
     const userExists = await User.findById(uploadedBy);
     if (!userExists) return res.status(404).json({ success: false, message: addContactMSG.uploadedByNotExist })
 
-    const contact = new Contact({ name, company, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact });
+    const contact = new Contact({ name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact });
     await contact.save();
     return res.status(201).json({ success: true, message: addContactMSG.addContactSucccess, contact });
 

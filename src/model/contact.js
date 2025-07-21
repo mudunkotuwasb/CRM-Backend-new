@@ -3,7 +3,7 @@ const CONTACT_STATUS = require('../utils/status');
 
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true }, 
-  company: { type: mongoose.Schema.Types.ObjectId, required: true },
+  company: { type: String, required: true },
   position: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
