@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const User = require('../model/user');
+const ROLES = require('../utils/roles')
 
 /**
  * Check if user account exist by username.
@@ -36,8 +37,13 @@ const signupSchema = Joi.object({
     .min(8)
     .required(),
   role: Joi.string()
-    .valid("ADMIN", "MANAGEMENT", "MARKETING_STAFF", "COMPANY_REPRESENTATIVE") // TODO: take this values from the enum
-    .required()
+    .valid(
+      ROLES.admin.value,
+      ROLES.marketing_staff.value,
+      ROLES.management.value,
+      ROLES.company_representative.value
+    )
+    .required(),
 });
 
 /**
