@@ -42,6 +42,7 @@ router.post("/signup", async (req, res) => {
  */
 
 router.post("/login", async (req, res) => {
+  console.log("Login request received:", req.body);
   await userLogin(req.body, res);
 });
 /**
