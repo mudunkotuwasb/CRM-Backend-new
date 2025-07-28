@@ -9,25 +9,57 @@ const { addContactMSG,
 
 const addContact = async (req, res) => {
   try {
+
     const { name, company, position, email, phone, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
     console.log("Adding contact:", req.body);
     // Validate assignedTo if provided
     if (!uploadedBy)
       return res.status(404).json({ success: false, message: addContactMSG.isUploadedByEmpty })
 
-    if (!mongoose.Types.ObjectId.isValid(uploadedBy))
-      return res.status(400).json({ success: false, message: addContactMSG.isUploadedByValied })
+    const { name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
+
+    // Validate required fields
+    if (!name || !company || !position || !contactInfo?.email || !contactInfo?.phone) {
+      return res.status(400).json({ success: false, message: "All required fields must be provided" });
+    }
+
+
+    // Validate uploadedBy
+    if (!uploadedBy) {
+      return res.status(400).json({ success: false, message: addContactMSG.isUploadedByEmpty });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(uploadedBy)) {
+      return res.status(400).json({ success: false, message: addContactMSG.isUploadedByValied });
+    }
 
     const userExists = await User.findById(uploadedBy);
-    if (!userExists) return res.status(404).json({ success: false, message: addContactMSG.uploadedByNotExist })
+    if (!userExists) {
+      return res.status(404).json({ success: false, message: addContactMSG.uploadedByNotExist });
+    }
+
+    //Create contact with proper field structure
+    const contact = new Contact({ 
+      name, 
+      company, 
+      position, 
+      contactInfo, 
+      uploadedBy, 
+      uploadDate, 
+      assignedTo: assignedTo || "Unassigned", 
+      status: status || CONTACT_STATUS.UNASSIGNED,
+      lastContact: lastContact || new Date(0) 
+    });
+
 
     const contact = new Contact({ name, company, position, email, phone, uploadedBy, uploadDate, assignedTo, status, lastContact });
+
     await contact.save();
     return res.status(201).json({ success: true, message: addContactMSG.addContactSucccess, contact });
 
   } catch (err) {
     console.error("Add contact error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
