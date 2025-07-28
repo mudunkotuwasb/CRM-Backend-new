@@ -36,7 +36,7 @@ const login = async (userRequest, res) => {
 
       let result = {
         username: user.username, role: user.role, email: user.email, lastLogin: user.lastLogin, 
-        status: user.status, token: `Bearer ${token}`, expiresIn: TOKEN_EXPIRATION};
+        status: user.status, token: `${token}`, expiresIn: TOKEN_EXPIRATION};
 
       return res.status(200).json({
         ...result,

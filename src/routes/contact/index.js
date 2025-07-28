@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
 router.post("/addContact", addContact);
 /**
  * @swagger
- * /api/company-representative/addContact:
+ * /api/contact-manager/addContact:
  *   post:
  *     summary: Add a new contact
  *     tags: [Admin, Company Representative]
@@ -95,7 +95,7 @@ router.post("/addContact", addContact);
 router.put("/updateContact/:id", updateContact);
 /**
  * @swagger
- * /api/company-representative/updateContact/{id}:
+ * /api/contact-manager/updateContact/{id}:
  *   put:
  *     summary: Update a contact by ID
  *     tags: [Admin, Company Representative]
@@ -176,7 +176,7 @@ router.put("/updateContact/:id", updateContact);
 router.get("/allContacts", getAllContacts);
 /**
  * @swagger
- * /api/company-representative/allContacts:
+ * /api/contact-manager/allContacts:
  *   get:
  *     summary: Get all contacts
  *     tags: [Admin, Company Representative]
@@ -193,7 +193,7 @@ router.get("/allContacts", getAllContacts);
 router.post("/getContactByEmail", getContactsByEmail);
 /**
  * @swagger
- * /api/company-representative/getContactByEmail:
+ * /api/contact-manager/getContactByEmail:
  *   post:
  *     summary: Get contacts by email
  *     tags: [Admin, Company Representative]
@@ -226,7 +226,7 @@ router.post("/getContactByEmail", getContactsByEmail);
 router.put("/changeContactStatus/:id", changeContactStatus);
 /**
  * @swagger
- * /api/company-representative/changeContactStatus/{id}:
+ * /api/contact-manager/changeContactStatus/{id}:
  *   put:
  *     summary: Change the status of a contact
  *     tags: [Admin, Company Representative]
@@ -265,7 +265,7 @@ router.put("/changeContactStatus/:id", changeContactStatus);
 router.post("/getContactByStatus", getContactsByStatus);
 /**
  * @swagger
- * /api/company-representative/getContactByStatus:
+ * /api/contact-manager/getContactByStatus:
  *   post:
  *     summary: Get contacts by status
  *     tags: [Admin, Company Representative]

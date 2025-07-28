@@ -9,12 +9,20 @@ const { addContactMSG,
 
 const addContact = async (req, res) => {
   try {
+
+    const { name, company, position, email, phone, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
+    console.log("Adding contact:", req.body);
+    // Validate assignedTo if provided
+    if (!uploadedBy)
+      return res.status(404).json({ success: false, message: addContactMSG.isUploadedByEmpty })
+
     const { name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
 
     // Validate required fields
     if (!name || !company || !position || !contactInfo?.email || !contactInfo?.phone) {
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
+
 
     // Validate uploadedBy
     if (!uploadedBy) {
@@ -43,6 +51,9 @@ const addContact = async (req, res) => {
       lastContact: lastContact || new Date(0) 
     });
 
+
+    const contact = new Contact({ name, company, position, email, phone, uploadedBy, uploadDate, assignedTo, status, lastContact });
+
     await contact.save();
     return res.status(201).json({ success: true, message: addContactMSG.addContactSucccess, contact });
 
@@ -56,14 +67,14 @@ const updateContact = async (req, res) => {
   try {
     const { id } = req.params;
     await CheckIsDeleted(id);
-    const { name, company, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
+    const { name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
 
     const oldRec = await Contact.findById(id);
     if (!oldRec) return res.status(404).json({ success: false, message: updateContactMSG.contactNotExist });
 
     const contact = await Contact.findByIdAndUpdate(
       id,
-      { name, company, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact },
+      { name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact },
       { new: true }
     );
     return res.status(200).json({ success: true, message: updateContactMSG.updateContactSuccess, contact });
