@@ -8,10 +8,10 @@ const contactSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  uploadDDate: { type: Date, required: true },
+  uploadDate: { type: Date, required: true },
   assignedTo: { type: String, default: "Unassigned" },
   status: { type: String, default: CONTACT_STATUS.UNASSIGNED, enum: [CONTACT_STATUS.ASSIGNED, CONTACT_STATUS.UNASSIGNED] },
-  lastContact: { type: Date, default: "Never" },
+  lastContact: { type: String, default: "Never" },
   isDeleted: { type: Boolean, default: false },
 }, { timestamps: true });
 
