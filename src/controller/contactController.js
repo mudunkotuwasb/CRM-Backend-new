@@ -16,10 +16,8 @@ const addContact = async (req, res) => {
     if (!uploadedBy)
       return res.status(404).json({ success: false, message: addContactMSG.isUploadedByEmpty })
 
-    const { name, company, position, contactInfo, uploadedBy, uploadDate, assignedTo, status, lastContact } = req.body;
-
     // Validate required fields
-    if (!name || !company || !position || !contactInfo?.email || !contactInfo?.phone) {
+    if (!name || !company || !position || !email || !phone) {
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
 
@@ -39,17 +37,6 @@ const addContact = async (req, res) => {
     }
 
     //Create contact with proper field structure
-    const contact = new Contact({ 
-      name, 
-      company, 
-      position, 
-      contactInfo, 
-      uploadedBy, 
-      uploadDate, 
-      assignedTo: assignedTo || "Unassigned", 
-      status: status || CONTACT_STATUS.UNASSIGNED,
-      lastContact: lastContact || new Date(0) 
-    });
 
 
     const contact = new Contact({ name, company, position, email, phone, uploadedBy, uploadDate, assignedTo, status, lastContact });
