@@ -83,11 +83,11 @@ const getContactsByEmail = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: getContactsByEmailMSG.isEmailEmpty });
-
-    const contact = await Contact.findOne({ email, isDeleted: false });
-    if (!contact) return res.status(404).json({ success: false, message: getContactsByEmailMSG.contactNotExist });
-
-    return res.status(200).json({ success: true, contact });
+    // CHANGE: Using find() instead of findOne() to get all matching contacts
+    const contacts = await Contact.find({ email, isDeleted: false });
+    if (!contacts) return res.status(404).json({ success: false, message: getContactsByEmailMSG.contactNotExist });
+    // CHANGE: Returning contacts array instead of single contact
+    return res.status(200).json({ success: true, contacts });
 
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
