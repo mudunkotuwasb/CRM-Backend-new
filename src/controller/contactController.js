@@ -69,12 +69,29 @@ const updateContact = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-
-const getAllContacts = async (_req, res) => {
+const getAllContacts = async (req, res) => {
   try {
-    const allContacts = await Contact.find({ isDeleted: false });
+    const contacts = await Contact.find({ isDeleted: false })
+      .populate("uploadedBy", "username");
+
+    const allContacts = contacts.map(contact => ({
+      _id: contact._id,
+      name: contact.name,
+      company: contact.company,
+      position: contact.position,
+      email: contact.email || 'No email',
+      phone: contact.phone || 'No phone',
+      uploadedBy: contact.uploadedBy?.username || 'Unknown', // Flattened
+      uploadDate: contact.uploadDate,
+      assignedTo: contact.assignedTo || "Unassigned",
+      status: contact.status || "UNASSIGNED",
+      lastContact: contact.lastContact || new Date(0),
+      isDeleted: contact.isDeleted || false,
+    }));
+
     return res.json({ allContacts });
   } catch (err) {
+    console.error("Error getting contacts:", err);
     return res.status(500).json({ message: err.message });
   }
 };
@@ -87,6 +104,23 @@ const getContactsByEmail = async (req, res) => {
     const contacts = await Contact.find({ email, isDeleted: false });
     if (!contacts) return res.status(404).json({ success: false, message: getContactsByEmailMSG.contactNotExist });
     // CHANGE: Returning contacts array instead of single contact
+    return res.status(200).json({ success: true, contacts });
+
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getMyContacts = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized: user not found in token" });
+    }
+
+    // 🟢 Find contacts created by this user
+    const contacts = await Contact.find({ uploadedBy: userId, isDeleted: false }).populate('uploadedBy', 'name');
+
     return res.status(200).json({ success: true, contacts });
 
   } catch (err) {
@@ -136,6 +170,7 @@ module.exports = {
   updateContact,
   getAllContacts,
   getContactsByEmail,
+  getMyContacts,
   changeContactStatus,
   getContactsByStatus
 };

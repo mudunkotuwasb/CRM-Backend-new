@@ -6,7 +6,7 @@ const {
     getContactsByEmail,
     changeContactStatus,
     getContactsByStatus
-} = require("../../controller/contactController")
+} = require("../../controller/contactController");
 
 router.get("/", (req, res) => {
     res.send("Company Representative API running...");
