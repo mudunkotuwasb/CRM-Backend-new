@@ -96,18 +96,26 @@ const getAllContacts = async (req, res) => {
   }
 };
 
-const getContactsByEmail = async (req, res) => {
+// Change the function name and logic
+const getContactsByAdminId = async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: getContactsByEmailMSG.isEmailEmpty });
-    // CHANGE: Using find() instead of findOne() to get all matching contacts
-    const contacts = await Contact.find({ email, isDeleted: false });
-    if (!contacts) return res.status(404).json({ success: false, message: getContactsByEmailMSG.contactNotExist });
-    // CHANGE: Returning contacts array instead of single contact
-    return res.status(200).json({ success: true, contacts });
+    const { adminId } = req.body;
 
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    // Validate adminId (instead of email validation)
+    if (!adminId) {
+      return res.status(400).json({ message: "Admin ID is required" });
+    }
+
+    // Query database by adminId (instead of email)
+    const contacts = await Contact.find({ uploadedBy: adminId }); // Adjust field name as needed
+
+    if (!contacts || contacts.length === 0) {
+      return res.status(404).json({ message: "No contacts found for this admin" });
+    }
+
+    res.status(200).json({ contacts });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
 
@@ -169,7 +177,7 @@ module.exports = {
   addContact,
   updateContact,
   getAllContacts,
-  getContactsByEmail,
+    getContactsByAdminId,
   getMyContacts,
   changeContactStatus,
   getContactsByStatus
