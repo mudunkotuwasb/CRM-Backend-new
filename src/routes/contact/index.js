@@ -3,7 +3,7 @@ const {
     addContact,
     updateContact,
     getAllContacts,
-    getContactsByEmail,
+    getContactsByAdminId,
     changeContactStatus,
     getContactsByStatus
 } = require("../../controller/contactController");
@@ -189,17 +189,16 @@ router.get("/allContacts", getAllContacts);
  *       500:
  *         description: Internal Server Error
  */
-
-router.post("/getContactByEmail", getContactsByEmail);
+router.post("/getContactsByAdminId", getContactsByAdminId);
 /**
  * @swagger
- * /api/contact-manager/getContactByEmail:
+ * /api/contact-manager/getContactsByAdminId:
  *   post:
- *     summary: Get contacts by email
+ *     summary: Get contacts by admin ID
  *     tags: [Admin, Company Representative]
  *     security:
  *       - bearerAuth: []
- *     description: Allows Admin and Company Representative to retrieve contacts by their email.
+ *     description: Allows Admin and Company Representative to retrieve contacts by admin ID.
  *     requestBody:
  *       required: true
  *       content:
@@ -207,18 +206,18 @@ router.post("/getContactByEmail", getContactsByEmail);
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - adminId
  *             properties:
- *               email:
+ *               adminId:
  *                 type: string
- *                 example: "user@example.com"
+ *                 example: "64a7b8c9d1e2f3g4h5i6j7k8"
  *     responses:
  *       200:
- *         description: List of contacts matching the email
+ *         description: List of contacts for the specified admin
  *       400:
- *         description: Invalid email format
+ *         description: Invalid admin ID format
  *       404:
- *         description: No contacts found
+ *         description: No contacts found for this admin
  *       500:
  *         description: Internal Server Error
  */
