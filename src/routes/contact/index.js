@@ -5,7 +5,8 @@ const {
     getAllContacts,
     getContactsByAdminId,
     changeContactStatus,
-    getContactsByStatus
+    getContactsByStatus,
+    updateContactStatus
 } = require("../../controller/contactController");
 
 router.get("/", (req, res) => {
@@ -294,5 +295,50 @@ router.post("/getContactByStatus", getContactsByStatus);
  *       500:
  *         description: Internal Server Error
  */
+
+router.post("/updateStatus", updateContactStatus);
+/**
+ * @swagger
+ * /contact-manager/updateStatus:
+ *   post:
+ *     tags: [Company Representative]
+ *     summary: Update contact status
+ *     description: Update the status of a specific contact
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [contactId, status]
+ *             properties:
+ *               contactId:
+ *                 type: string
+ *                 example: "507f1f77bcf86cd799439011"
+ *               status:
+ *                 type: string
+ *                 enum: [UNASSIGNED, ASSIGNED, IN_PROGRESS, COMPLETED, PENDING, REJECTED]
+ *                 example: "COMPLETED"
+ *               lastContact:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2024-01-15T10:30:00.000Z"
+ *     responses:
+ *       200:
+ *         description: Contact status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Contact status updated successfully"
+ *                 contact:
+ *                   $ref: '#/components/schemas/Contact'
+ */
+
 
 module.exports = router;

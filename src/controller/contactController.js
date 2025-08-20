@@ -7,6 +7,8 @@ const { addContactMSG,
   changeContactStatusMSG,
   getContactsByStatusMSG } = require('../utils/reponseMessages');
 
+const { CONTACT_STATUS } = require('../utils/status'); 
+
 const addContact = async (req, res) => {
   try {
 
@@ -173,6 +175,73 @@ const CheckIsDeleted = async (id) => {
   }
 };
 
+
+
+
+const updateContactStatus = async (req, res) => {
+  try {
+    console.log("Update status request body:", req.body);
+    
+    const { contactId, status } = req.body;
+    
+    // Validate input
+    if (!contactId || !status) {
+      console.log("Missing contactId or status");
+      return res.status(400).json({ 
+        success: false, 
+        message: "Contact ID and status are required" 
+      });
+    }
+    
+    // Validate status value
+    if (!Object.values(CONTACT_STATUS).includes(status)) {
+      console.log("Invalid status value:", status);
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid status value" 
+      });
+    }
+    
+    console.log("Updating contact:", contactId, "to status:", status);
+    
+    // Find and update the contact
+    const contact = await Contact.findByIdAndUpdate(
+      contactId,
+      { 
+        status,
+        lastContact: new Date() // Update last contact date
+      },
+      { new: true } // Return the updated document
+    );
+    
+    if (!contact) {
+      console.log("Contact not found:", contactId);
+      return res.status(404).json({ 
+        success: false, 
+        message: "Contact not found" 
+      });
+    }
+    
+    console.log("Contact updated successfully:", contact);
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Contact status updated successfully",
+      contact 
+    });
+    
+  } catch (err) {
+    console.error("Update contact status error:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
+
+
+
 module.exports = {
   addContact,
   updateContact,
@@ -180,5 +249,6 @@ module.exports = {
     getContactsByAdminId,
   getMyContacts,
   changeContactStatus,
-  getContactsByStatus
+  getContactsByStatus,
+  updateContactStatus
 };

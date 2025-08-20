@@ -10,7 +10,7 @@ const contactSchema = new mongoose.Schema({
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   uploadDate: { type: Date, required: true }, // Change
   assignedTo: { type: String, default: "Unassigned" },
-  status: { type: String, default: CONTACT_STATUS.UNASSIGNED, enum: [CONTACT_STATUS.ASSIGNED, CONTACT_STATUS.UNASSIGNED] },
+  status: { type: String, default: CONTACT_STATUS.UNASSIGNED, enum: Object.values(CONTACT_STATUS) },
   lastContact: { type: Date, default: new Date(0) }, // Change:
 
   isDeleted: { type: Boolean, default: false },
