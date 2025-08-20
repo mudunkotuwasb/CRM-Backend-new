@@ -240,15 +240,56 @@ const updateContactStatus = async (req, res) => {
 };
 
 
+const deleteContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`Attempting to HARD DELETE contact with ID: ${id}`);
+    
+    // Validate contact ID
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Contact ID is required" 
+      });
+    }
+
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Contact not found" 
+      });
+    }
+
+    await Contact.findByIdAndDelete(id);
+
+    console.log(`Contact ${id} permanently deleted from database`);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Contact permanently deleted successfully" 
+    });
+  } catch (error) {
+    console.error("Error deleting contact:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal Server Error", 
+      error: error.message 
+    });
+  }
+};
+
 
 
 module.exports = {
   addContact,
   updateContact,
   getAllContacts,
-    getContactsByAdminId,
+  getContactsByAdminId,
   getMyContacts,
   changeContactStatus,
   getContactsByStatus,
-  updateContactStatus
+  updateContactStatus,
+  deleteContact
 };

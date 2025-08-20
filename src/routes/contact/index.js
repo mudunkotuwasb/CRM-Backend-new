@@ -6,7 +6,8 @@ const {
     getContactsByAdminId,
     changeContactStatus,
     getContactsByStatus,
-    updateContactStatus
+    updateContactStatus,
+    deleteContact
 } = require("../../controller/contactController");
 
 router.get("/", (req, res) => {
@@ -340,5 +341,48 @@ router.post("/updateStatus", updateContactStatus);
  *                   $ref: '#/components/schemas/Contact'
  */
 
+router.delete("/delete/:id", deleteContact);
+/**
+ * @swagger
+ * /contact-manager/delete/{id}:
+ *   delete:
+ *     tags: [Company Representative]
+ *     summary: Delete a contact permanently
+ *     description: Permanently delete a contact from the database (hard delete)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the contact to delete
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Contact deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Contact permanently deleted successfully"
+ *       400:
+ *         description: Bad request - missing or invalid contact ID
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have required role permissions
+ *       404:
+ *         description: Contact not found
+ *       500:
+ *         description: Internal server error
+ */
 
 module.exports = router;
