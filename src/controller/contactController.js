@@ -282,6 +282,67 @@ const deleteContact = async (req, res) => {
 
 
 
+
+const addNoteToContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes, outcome, nextAction, scheduledDate } = req.body;
+
+    // Validate required fields
+    if (!notes || !outcome) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Notes and outcome are required fields' 
+      });
+    }
+
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ success: false, message: 'Contact not found' });
+    }
+
+    // Validate and fix contact status if invalid
+    const validStatusValues = Object.values(CONTACT_STATUS);
+    if (!validStatusValues.includes(contact.status)) {
+      console.warn(`Invalid status ${contact.status} found, resetting to UNASSIGNED`);
+      contact.status = CONTACT_STATUS.UNASSIGNED;
+    }
+
+
+    // Create new note
+    const newNote = {
+      id: contact.contactHistory ? contact.contactHistory.length + 1 : 1,
+      date: new Date(),
+      notes: notes.trim(),
+      outcome: outcome.trim(),
+      nextAction: nextAction ? nextAction.trim() : undefined,
+      scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined
+    };
+
+    // Update contact Notes array and last contact date
+    contact.contactHistory = contact.contactHistory || [];
+    contact.contactHistory.push(newNote);
+    contact.lastContact = new Date();
+
+    await contact.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Note added successfully',
+      note: newNote
+    });
+  } catch (error) {
+    console.error('Error adding note:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to add note',
+      error: error.message 
+    });
+  }
+};
+
+
+
 module.exports = {
   addContact,
   updateContact,
@@ -291,5 +352,6 @@ module.exports = {
   changeContactStatus,
   getContactsByStatus,
   updateContactStatus,
-  deleteContact
+  deleteContact,
+  addNoteToContact
 };

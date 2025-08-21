@@ -7,7 +7,8 @@ const {
     changeContactStatus,
     getContactsByStatus,
     updateContactStatus,
-    deleteContact
+    deleteContact,
+    addNoteToContact
 } = require("../../controller/contactController");
 
 router.get("/", (req, res) => {
@@ -379,6 +380,96 @@ router.delete("/delete/:id", deleteContact);
  *         description: Unauthorized - invalid or missing authentication token
  *       403:
  *         description: Forbidden - user doesn't have required role permissions
+ *       404:
+ *         description: Contact not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
+router.post('/:id/notes', addNoteToContact);
+/**
+ * @swagger
+ * /contacts/{id}/notes:
+ *   post:
+ *     tags: [Company Representative]
+ *     summary: Add a note to a contact
+ *     description: Add a new note with details about interaction with a contact
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the contact to add note to
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notes
+ *               - outcome
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 description: The content of the note
+ *                 example: "Had a productive call about potential partnership. Discussed pricing and timeline."
+ *               outcome:
+ *                 type: string
+ *                 enum: [interested, not_interested, follow_up, no_response, callback]
+ *                 description: Outcome of the interaction
+ *                 example: "interested"
+ *               nextAction:
+ *                 type: string
+ *                 description: Next action to be taken
+ *                 example: "Schedule meeting"
+ *               scheduledDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date and time for the next action (ISO format)
+ *                 example: "2024-01-15T14:30:00.000Z"
+ *     responses:
+ *       201:
+ *         description: Note added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Note added successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     note:
+ *                       $ref: '#/components/schemas/Note'
+ *       400:
+ *         description: Bad request - missing required fields or invalid data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Notes and outcome are required fields"
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have permission to add notes to this contact
  *       404:
  *         description: Contact not found
  *       500:

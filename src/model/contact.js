@@ -14,6 +14,15 @@ const contactSchema = new mongoose.Schema({
   lastContact: { type: Date, default: new Date(0) }, // Change:
 
   isDeleted: { type: Boolean, default: false },
+
+  contactHistory: [{
+    id: { type: Number, required: true },
+    date: { type: Date, required: true },
+    notes: { type: String, required: true },
+    outcome: { type: String, required: true },
+    nextAction: { type: String },
+    scheduledDate: { type: Date }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model("Contact", contactSchema);
