@@ -306,8 +306,8 @@ const addNoteToContact = async (req, res) => {
     if (!validStatusValues.includes(contact.status)) {
       console.warn(`Invalid status ${contact.status} found, resetting to UNASSIGNED`);
       contact.status = CONTACT_STATUS.UNASSIGNED;
+      await contact.save();
     }
-
 
     // Create new note
     const newNote = {
@@ -343,6 +343,74 @@ const addNoteToContact = async (req, res) => {
 
 
 
+const deleteContactHistory = async (req, res) => {
+  try {
+    const { contactId, historyId } = req.params;
+    
+    // Validate input
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid contact ID"
+      });
+    }
+
+    const parsedHistoryId = parseInt(historyId);
+    if (isNaN(parsedHistoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid history ID"
+      });
+    }
+
+    // Find the contact
+    const contact = await Contact.findById(contactId);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact not found"
+      });
+    }
+
+    // Find the history item index
+    const historyIndex = contact.contactHistory.findIndex(
+      history => history.id === parsedHistoryId
+    );
+
+    if (historyIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact history not found"
+      });
+    }
+
+    // Remove the history item
+    contact.contactHistory.splice(historyIndex, 1);
+
+    // FIX: Ensure status is valid before saving
+    if (!Object.values(CONTACT_STATUS).includes(contact.status)) {
+      // Reset to default status if current status is invalid
+      contact.status = CONTACT_STATUS.UNASSIGNED;
+    }
+
+    // Save the updated contact
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Contact history deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("Error deleting contact history:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   addContact,
   updateContact,
@@ -353,5 +421,6 @@ module.exports = {
   getContactsByStatus,
   updateContactStatus,
   deleteContact,
-  addNoteToContact
+  addNoteToContact,
+  deleteContactHistory
 };

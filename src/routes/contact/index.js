@@ -8,7 +8,8 @@ const {
     getContactsByStatus,
     updateContactStatus,
     deleteContact,
-    addNoteToContact
+    addNoteToContact,
+    deleteContactHistory
 } = require("../../controller/contactController");
 
 router.get("/", (req, res) => {
@@ -475,5 +476,94 @@ router.post('/:id/notes', addNoteToContact);
  *       500:
  *         description: Internal server error
  */
+
+
+router.delete("/:contactId/history/:historyId", deleteContactHistory);
+/**
+ * @swagger
+ * /contacts/{contactId}/history/{historyId}:
+ *   delete:
+ *     tags: [Company Representative]
+ *     summary: Delete a specific contact history entry
+ *     description: Remove a specific contact history note from a contact's history
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: contactId
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the contact
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *       - name: historyId
+ *         in: path
+ *         required: true
+ *         description: Numeric ID of the history entry to delete
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Contact history deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Contact history deleted successfully"
+ *       400:
+ *         description: Bad request - invalid contact ID or history ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid contact ID"
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have permission to delete contact history
+ *       404:
+ *         description: Contact or contact history not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Contact not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error message details"
+ */
+
 
 module.exports = router;
