@@ -5,7 +5,11 @@ const {
     getAllContacts,
     getContactsByAdminId,
     changeContactStatus,
-    getContactsByStatus
+    getContactsByStatus,
+    updateContactStatus,
+    deleteContact,
+    addNoteToContact,
+    deleteContactHistory
 } = require("../../controller/contactController");
 
 router.get("/", (req, res) => {
@@ -294,5 +298,272 @@ router.post("/getContactByStatus", getContactsByStatus);
  *       500:
  *         description: Internal Server Error
  */
+
+router.post("/updateStatus", updateContactStatus);
+/**
+ * @swagger
+ * /contact-manager/updateStatus:
+ *   post:
+ *     tags: [Company Representative]
+ *     summary: Update contact status
+ *     description: Update the status of a specific contact
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [contactId, status]
+ *             properties:
+ *               contactId:
+ *                 type: string
+ *                 example: "507f1f77bcf86cd799439011"
+ *               status:
+ *                 type: string
+ *                 enum: [UNASSIGNED, ASSIGNED, IN_PROGRESS, COMPLETED, PENDING, REJECTED]
+ *                 example: "COMPLETED"
+ *               lastContact:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2024-01-15T10:30:00.000Z"
+ *     responses:
+ *       200:
+ *         description: Contact status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Contact status updated successfully"
+ *                 contact:
+ *                   $ref: '#/components/schemas/Contact'
+ */
+
+router.delete("/delete/:id", deleteContact);
+/**
+ * @swagger
+ * /contact-manager/delete/{id}:
+ *   delete:
+ *     tags: [Company Representative]
+ *     summary: Delete a contact permanently
+ *     description: Permanently delete a contact from the database (hard delete)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the contact to delete
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Contact deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Contact permanently deleted successfully"
+ *       400:
+ *         description: Bad request - missing or invalid contact ID
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have required role permissions
+ *       404:
+ *         description: Contact not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
+router.post('/:id/notes', addNoteToContact);
+/**
+ * @swagger
+ * /contacts/{id}/notes:
+ *   post:
+ *     tags: [Company Representative]
+ *     summary: Add a note to a contact
+ *     description: Add a new note with details about interaction with a contact
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the contact to add note to
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notes
+ *               - outcome
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 description: The content of the note
+ *                 example: "Had a productive call about potential partnership. Discussed pricing and timeline."
+ *               outcome:
+ *                 type: string
+ *                 enum: [interested, not_interested, follow_up, no_response, callback]
+ *                 description: Outcome of the interaction
+ *                 example: "interested"
+ *               nextAction:
+ *                 type: string
+ *                 description: Next action to be taken
+ *                 example: "Schedule meeting"
+ *               scheduledDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date and time for the next action (ISO format)
+ *                 example: "2024-01-15T14:30:00.000Z"
+ *     responses:
+ *       201:
+ *         description: Note added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Note added successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     note:
+ *                       $ref: '#/components/schemas/Note'
+ *       400:
+ *         description: Bad request - missing required fields or invalid data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Notes and outcome are required fields"
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have permission to add notes to this contact
+ *       404:
+ *         description: Contact not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+router.delete("/:contactId/history/:historyId", deleteContactHistory);
+/**
+ * @swagger
+ * /contacts/{contactId}/history/{historyId}:
+ *   delete:
+ *     tags: [Company Representative]
+ *     summary: Delete a specific contact history entry
+ *     description: Remove a specific contact history note from a contact's history
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: contactId
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the contact
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *       - name: historyId
+ *         in: path
+ *         required: true
+ *         description: Numeric ID of the history entry to delete
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Contact history deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Contact history deleted successfully"
+ *       400:
+ *         description: Bad request - invalid contact ID or history ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid contact ID"
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have permission to delete contact history
+ *       404:
+ *         description: Contact or contact history not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Contact not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error message details"
+ */
+
 
 module.exports = router;

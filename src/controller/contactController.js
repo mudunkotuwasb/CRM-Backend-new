@@ -7,6 +7,8 @@ const { addContactMSG,
   changeContactStatusMSG,
   getContactsByStatusMSG } = require('../utils/reponseMessages');
 
+const { CONTACT_STATUS } = require('../utils/status'); 
+
 const addContact = async (req, res) => {
   try {
 
@@ -173,12 +175,252 @@ const CheckIsDeleted = async (id) => {
   }
 };
 
+
+
+
+const updateContactStatus = async (req, res) => {
+  try {
+    console.log("Update status request body:", req.body);
+    
+    const { contactId, status } = req.body;
+    
+    // Validate input
+    if (!contactId || !status) {
+      console.log("Missing contactId or status");
+      return res.status(400).json({ 
+        success: false, 
+        message: "Contact ID and status are required" 
+      });
+    }
+    
+    // Validate status value
+    if (!Object.values(CONTACT_STATUS).includes(status)) {
+      console.log("Invalid status value:", status);
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid status value" 
+      });
+    }
+    
+    console.log("Updating contact:", contactId, "to status:", status);
+    
+    // Find and update the contact
+    const contact = await Contact.findByIdAndUpdate(
+      contactId,
+      { 
+        status,
+        lastContact: new Date() // Update last contact date
+      },
+      { new: true } // Return the updated document
+    );
+    
+    if (!contact) {
+      console.log("Contact not found:", contactId);
+      return res.status(404).json({ 
+        success: false, 
+        message: "Contact not found" 
+      });
+    }
+    
+    console.log("Contact updated successfully:", contact);
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Contact status updated successfully",
+      contact 
+    });
+    
+  } catch (err) {
+    console.error("Update contact status error:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
+
+const deleteContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`Attempting to HARD DELETE contact with ID: ${id}`);
+    
+    // Validate contact ID
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Contact ID is required" 
+      });
+    }
+
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Contact not found" 
+      });
+    }
+
+    await Contact.findByIdAndDelete(id);
+
+    console.log(`Contact ${id} permanently deleted from database`);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Contact permanently deleted successfully" 
+    });
+  } catch (error) {
+    console.error("Error deleting contact:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal Server Error", 
+      error: error.message 
+    });
+  }
+};
+
+
+
+
+const addNoteToContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes, outcome, nextAction, scheduledDate } = req.body;
+
+    // Validate required fields
+    if (!notes || !outcome) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Notes and outcome are required fields' 
+      });
+    }
+
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ success: false, message: 'Contact not found' });
+    }
+
+    // Validate and fix contact status if invalid
+    const validStatusValues = Object.values(CONTACT_STATUS);
+    if (!validStatusValues.includes(contact.status)) {
+      console.warn(`Invalid status ${contact.status} found, resetting to UNASSIGNED`);
+      contact.status = CONTACT_STATUS.UNASSIGNED;
+      await contact.save();
+    }
+
+    // Create new note
+    const newNote = {
+      id: contact.contactHistory ? contact.contactHistory.length + 1 : 1,
+      date: new Date(),
+      notes: notes.trim(),
+      outcome: outcome.trim(),
+      nextAction: nextAction ? nextAction.trim() : undefined,
+      scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined
+    };
+
+    // Update contact Notes array and last contact date
+    contact.contactHistory = contact.contactHistory || [];
+    contact.contactHistory.push(newNote);
+    contact.lastContact = new Date();
+
+    await contact.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Note added successfully',
+      note: newNote
+    });
+  } catch (error) {
+    console.error('Error adding note:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to add note',
+      error: error.message 
+    });
+  }
+};
+
+
+
+const deleteContactHistory = async (req, res) => {
+  try {
+    const { contactId, historyId } = req.params;
+    
+    // Validate input
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid contact ID"
+      });
+    }
+
+    const parsedHistoryId = parseInt(historyId);
+    if (isNaN(parsedHistoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid history ID"
+      });
+    }
+
+    // Find the contact
+    const contact = await Contact.findById(contactId);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact not found"
+      });
+    }
+
+    // Find the history item index
+    const historyIndex = contact.contactHistory.findIndex(
+      history => history.id === parsedHistoryId
+    );
+
+    if (historyIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact history not found"
+      });
+    }
+
+    // Remove the history item
+    contact.contactHistory.splice(historyIndex, 1);
+
+    // FIX: Ensure status is valid before saving
+    if (!Object.values(CONTACT_STATUS).includes(contact.status)) {
+      // Reset to default status if current status is invalid
+      contact.status = CONTACT_STATUS.UNASSIGNED;
+    }
+
+    // Save the updated contact
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Contact history deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("Error deleting contact history:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   addContact,
   updateContact,
   getAllContacts,
-    getContactsByAdminId,
+  getContactsByAdminId,
   getMyContacts,
   changeContactStatus,
-  getContactsByStatus
+  getContactsByStatus,
+  updateContactStatus,
+  deleteContact,
+  addNoteToContact,
+  deleteContactHistory
 };
