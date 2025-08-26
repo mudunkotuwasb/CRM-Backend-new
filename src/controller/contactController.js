@@ -8,6 +8,7 @@ const { addContactMSG,
   getContactsByStatusMSG } = require('../utils/reponseMessages');
 
 const { CONTACT_STATUS } = require('../utils/status'); 
+const ScheduleContact = require('../model/ScheduleContact');
 
 const addContact = async (req, res) => {
   try {
@@ -411,6 +412,164 @@ const deleteContactHistory = async (req, res) => {
   }
 };
 
+
+
+const scheduleCalls = async (req, res) => {
+  try {
+    const { contactIds, scheduledDate, notes } = req.body;
+    const adminId = req.user.id;
+
+    // Validate input
+    if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide at least one contact'
+      });
+    }
+
+    if (!scheduledDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a scheduled date'
+      });
+    }
+
+    // Check if contacts exist and belong to the admin
+    const contacts = await Contact.find({
+      _id: { $in: contactIds },
+      $or: [
+        { assignedTo: adminId },
+        { uploadedBy: adminId }
+      ]
+    });
+
+    if (contacts.length !== contactIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'Some contacts were not found or you do not have permission to schedule calls for them'
+      });
+    }
+
+    // Create scheduled calls
+    const scheduledCalls = contactIds.map(contactId => ({
+      contactId,
+      adminId,
+      scheduledDate: new Date(scheduledDate),
+      notes: notes || ''
+    }));
+
+    const result = await ScheduleContact.insertMany(scheduledCalls);
+
+    // Update last contact date for each contact
+    await Contact.updateMany(
+      { _id: { $in: contactIds } },
+      { lastContact: new Date() }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: `Scheduled ${result.length} calls successfully`,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Error scheduling calls:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+
+const getScheduledCalls = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const { status, timeframe } = req.query;
+
+    let query = { adminId };
+
+    // Add status filter if provided
+    if (status && ['scheduled', 'completed', 'cancelled', 'missed'].includes(status)) {
+      query.status = status;
+    }
+
+    // Add date filter if timeframe is provided
+    if (timeframe === 'today') {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      query.scheduledDate = {
+        $gte: startOfDay,
+        $lte: endOfDay
+      };
+    } else if (timeframe === 'upcoming') {
+      query.scheduledDate = { $gte: new Date() };
+      query.status = 'scheduled';
+    }
+
+    const scheduledCalls = await ScheduleContact.find(query)
+      .populate('contactId', 'name company phone email position')
+      .sort({ scheduledDate: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: scheduledCalls
+    });
+
+  } catch (error) {
+    console.error('Error fetching scheduled calls:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+
+const deleteScheduledCall = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.id;
+
+    // Find the scheduled call and verify it belongs to the admin
+    const scheduledCall = await ScheduleContact.findOne({
+      _id: id,
+      adminId: adminId
+    });
+
+    if (!scheduledCall) {
+      return res.status(404).json({
+        success: false,
+        message: 'Scheduled call not found or you do not have permission to delete it'
+      });
+    }
+
+    // Delete the scheduled call
+    await ScheduleContact.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Scheduled call deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting scheduled call:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+
+
 module.exports = {
   addContact,
   updateContact,
@@ -422,5 +581,8 @@ module.exports = {
   updateContactStatus,
   deleteContact,
   addNoteToContact,
-  deleteContactHistory
+  deleteContactHistory,
+  scheduleCalls,
+  getScheduledCalls,
+  deleteScheduledCall
 };
