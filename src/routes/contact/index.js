@@ -9,8 +9,12 @@ const {
     updateContactStatus,
     deleteContact,
     addNoteToContact,
-    deleteContactHistory
+    deleteContactHistory,
+    scheduleCalls,
+    getScheduledCalls,
+    deleteScheduledCall
 } = require("../../controller/contactController");
+
 
 router.get("/", (req, res) => {
     res.send("Company Representative API running...");
@@ -565,5 +569,247 @@ router.delete("/:contactId/history/:historyId", deleteContactHistory);
  *                   example: "Error message details"
  */
 
+router.post('/scheduleCalls', scheduleCalls);
+/**
+ * @swagger
+ * /contact-manager/add schedule Calls:
+ *   post:
+ *     tags: [Company Representative]
+ *     summary: Schedule calls for multiple contacts
+ *     description: Schedule calls for selected contacts with date, time, and optional notes
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contactIds
+ *               - scheduledDate
+ *             properties:
+ *               contactIds:
+ *                 type: array
+ *                 description: Array of contact IDs to schedule calls for
+ *                 items:
+ *                   type: string
+ *                   example: "507f1f77bcf86cd799439011"
+ *               scheduledDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date and time for the scheduled calls
+ *                 example: "2023-12-25T10:30:00.000Z"
+ *               notes:
+ *                 type: string
+ *                 description: Optional notes about the scheduled calls
+ *                 example: "Follow up on product demo"
+ *     responses:
+ *       201:
+ *         description: Calls scheduled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Scheduled 3 calls successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ScheduledCall'
+ *       400:
+ *         description: Bad request - invalid input data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Please provide at least one contact"
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have permission to schedule calls for these contacts
+ *       404:
+ *         description: Some contacts were not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Some contacts were not found or you do not have permission to schedule calls for them"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error message details"
+ */
+
+router.get('/scheduledCalls', getScheduledCalls);
+/**
+ * @swagger
+ * /contact-manager/get scheduled Calls:
+ *   get:
+ *     tags: [Company Representative]
+ *     summary: Get scheduled calls for the authenticated user
+ *     description: Retrieve scheduled calls with optional filtering by status and timeframe
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: status
+ *         in: query
+ *         required: false
+ *         description: Filter by call status
+ *         schema:
+ *           type: string
+ *           enum: [scheduled, completed, cancelled, missed]
+ *           example: "scheduled"
+ *       - name: timeframe
+ *         in: query
+ *         required: false
+ *         description: Filter by timeframe
+ *         schema:
+ *           type: string
+ *           enum: [today, upcoming]
+ *           example: "today"
+ *     responses:
+ *       200:
+ *         description: Scheduled calls retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ScheduledCall'
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error message details"
+ */
+
+router.delete('/scheduledCalls/:id', deleteScheduledCall);
+/**
+ * @swagger
+ * /contact-manager/deletescheduledCalls/{id}:
+ *   delete:
+ *     tags: [Company Representative]
+ *     summary: Delete a scheduled call
+ *     description: Remove a scheduled call from the system
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: MongoDB ID of the scheduled call to delete
+ *         schema:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Scheduled call deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Scheduled call deleted successfully"
+ *       400:
+ *         description: Bad request - invalid scheduled call ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid scheduled call ID"
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token
+ *       403:
+ *         description: Forbidden - user doesn't have permission to delete this scheduled call
+ *       404:
+ *         description: Scheduled call not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Scheduled call not found or you do not have permission to delete it"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error message details"
+ */
 
 module.exports = router;
