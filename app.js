@@ -9,7 +9,6 @@ const routers = require("./src/routes");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./src/config/swagger');
 
-
 const app = express();
 
 // Middlewares
@@ -23,6 +22,26 @@ app.use(passport.initialize());
 require("./src/middlewares/passport")(passport);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Root route handler - ADD THIS
+app.get('/', (req, res) => {
+  res.json({
+    message: 'CRM Backend API is running',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    documentation: '/api-docs',
+    api_base: '/api'
+  });
+});
+
+// Health check endpoint - OPTIONAL
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'CRM Backend',
+    uptime: process.uptime()
+  });
+});
 
 // Routes
 app.use("/api", routers);
