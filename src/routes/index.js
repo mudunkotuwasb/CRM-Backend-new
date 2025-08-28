@@ -8,7 +8,16 @@ const dataControllerRoute = require('./dataController');
 
 // Anyone can access this route
 router.get("/", (req, res) => {
-  res.send("Api running...");
+  res.json({
+    message: "API running",
+    status: "OK",
+    endpoints: {
+      auth: "/api/auth",
+      admin: "/api/admin",
+      contacts: "/api/contact-manager",
+      data: "/api/dataController"
+    }
+  });
 });
 // Authentication Router Middleware
 router.use("/auth", authRoute);
