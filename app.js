@@ -14,7 +14,7 @@ const app = express();
 // Middlewares
 app.use(cors({
   origin: ["http://localhost:3000",
-    "https://bucolic-rugelach-a780cd.netlify.app/"],
+    "https://melodic-parfait-ff2fa7.netlify.app/"],
   credentials: true
 }));
 app.use(express.json());
