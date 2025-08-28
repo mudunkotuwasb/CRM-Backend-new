@@ -13,7 +13,8 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000",
+    "https://bucolic-rugelach-a780cd.netlify.app/"],
   credentials: true
 }));
 app.use(express.json());
