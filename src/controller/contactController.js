@@ -102,21 +102,43 @@ const getAllContacts = async (req, res) => {
 // Change the function name and logic
 const getContactsByAdminId = async (req, res) => {
   try {
-    const { adminId } = req.body;
+    const { adminId, page = 1, limit = 10 } = req.body;
 
-    // Validate adminId (instead of email validation)
+    // Validate adminId
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID is required" });
     }
 
-    // Query database by adminId (instead of email)
-    const contacts = await Contact.find({ uploadedBy: adminId }); // Adjust field name as needed
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Query database with pagination
+    const contacts = await Contact.find({ uploadedBy: adminId, isDeleted: false })
+      .skip(skip)
+      .limit(limitNum)
+      .sort({ createdAt: -1 }); // Sort by most recent
+
+    // Get total count for pagination
+    const total = await Contact.countDocuments({ uploadedBy: adminId, isDeleted: false });
+    const totalPages = Math.ceil(total / limitNum);
 
     if (!contacts || contacts.length === 0) {
-      return res.status(404).json({ message: "No contacts found for this admin" });
+      return res.status(200).json({ 
+        contacts: [], 
+        total: 0, 
+        totalPages: 0,
+        message: "No contacts found for this admin" 
+      });
     }
 
-    res.status(200).json({ contacts });
+    res.status(200).json({ 
+      contacts, 
+      total, 
+      totalPages,
+      currentPage: pageNum 
+    });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
