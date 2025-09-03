@@ -72,11 +72,57 @@ const updateContact = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
 const getAllContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find({ isDeleted: false })
-      .populate("uploadedBy", "username");
-
+    //Extract pagination and filtering parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || "";
+    const filterType = req.query.filterType || "name";
+    const dateFilter = req.query.dateFilter ? new Date(req.query.dateFilter) : null;
+    
+    //Build search query
+    let searchQuery = { isDeleted: false };
+    
+    if (search) {
+      if (filterType === "name") {
+        searchQuery.name = { $regex: search, $options: "i" };
+      } else if (filterType === "company") {
+        searchQuery.company = { $regex: search, $options: "i" };
+      } else if (filterType === "email") {
+        searchQuery.email = { $regex: search, $options: "i" };
+      }
+    }
+    
+    //date filter if provided
+    if (dateFilter) {
+      const startOfDay = new Date(dateFilter);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(dateFilter);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      searchQuery.uploadDate = {
+        $gte: startOfDay,
+        $lte: endOfDay
+      };
+    }
+    
+    //Get total count for pagination
+    const totalContacts = await Contact.countDocuments(searchQuery);
+    const totalPages = Math.ceil(totalContacts / limit);
+    
+    //Fetch paginated contacts with population
+    const contacts = await Contact.find(searchQuery)
+      .populate("uploadedBy", "username")
+      .sort({ uploadDate: -1 }) // Sort by most recent first
+      .skip(skip)
+      .limit(limit);
+    
+    // Transform contacts to match frontend structure
     const allContacts = contacts.map(contact => ({
       _id: contact._id,
       name: contact.name,
@@ -84,15 +130,27 @@ const getAllContacts = async (req, res) => {
       position: contact.position,
       email: contact.email || 'No email',
       phone: contact.phone || 'No phone',
-      uploadedBy: contact.uploadedBy?.username || 'Unknown', // Flattened
+      uploadedBy: contact.uploadedBy?.username || 'Unknown',
       uploadDate: contact.uploadDate,
       assignedTo: contact.assignedTo || "Unassigned",
       status: contact.status || "UNASSIGNED",
       lastContact: contact.lastContact || new Date(0),
       isDeleted: contact.isDeleted || false,
+      contactHistory: contact.contactHistory || [],
     }));
-
-    return res.json({ allContacts });
+    
+    //Return with pagination info
+    return res.json({
+      allContacts,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalContacts,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    });
+    
   } catch (err) {
     console.error("Error getting contacts:", err);
     return res.status(500).json({ message: err.message });
